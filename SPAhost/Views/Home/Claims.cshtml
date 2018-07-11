@@ -1,0 +1,37 @@
+﻿@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Http
+
+@{
+    ViewData["Title"] = "Claims";
+}
+
+<h2>Claims</h2>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    $(function () {
+        window.sessionStorage.setItem("access_token", "@await ViewContext.HttpContext.GetTokenAsync("access_token")");
+        window.sessionStorage.setItem("refresh_token", "@await ViewContext.HttpContext.GetTokenAsync("refresh_token")");
+        window.sessionStorage.setItem("user", "@User.Claims.Where(c =>c.Type == "sub").Select(c=>c.Value).FirstOrDefault()");
+        if ("@ViewBag.redirect" !== "") {
+            window.location.href = "@ViewBag.redirect";
+        }
+    });
+</script>
+<dl>
+    @foreach (var claim in User.Claims)
+    {
+        <dt>@claim.Type</dt>
+        <dd>@claim.Value</dd>
+    }
+</dl>
+
+<h2>Tokens</h2>
+<dl>
+    <dt>id_token</dt>
+    <dd>@await ViewContext.HttpContext.GetTokenAsync("id_token")</dd>
+    <dt>access_token</dt>
+    <dd>@await ViewContext.HttpContext.GetTokenAsync("access_token")</dd>
+    <dt>refresh token</dt>
+    <dd>@await ViewContext.HttpContext.GetTokenAsync("refresh_token")</dd>
+</dl>
+

@@ -1,0 +1,85 @@
+﻿
+@{
+    ViewData["Title"] = "GetValues";
+}
+
+<h2>GetValues</h2>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const authAxios = axios.create();
+    authAxios.defaults.headers.common['Authorization'] = 'Bearer '.concat(window.sessionStorage.getItem("access_token"));
+    async function getValues() {
+        const accessToken = window.sessionStorage.getItem("access_token");
+        if (accessToken === null) {
+            window.location.href = "/home/reauthenticate";
+        }
+       
+        await token();
+        await authAxios.get(
+            'https://localhost:5005/api/values'
+        ).then((response) => {
+            console.log(response);
+            document.getElementById("content").innerHTML = JSON.stringify(response.data);
+        }).catch((error) => {
+            console.log(error);
+            if (error.response.status === 401) {
+                getValues2();
+            }
+        });
+    }
+
+    async function getValues2() {
+        await refreshTokens();
+        const authStr = 'Bearer '.concat(window.sessionStorage.getItem("access_token"));
+        await token();
+        await axios.get(
+            'https://localhost:5005/api/values'
+            , { headers: { Authorization: authStr } }
+        ).then((response) => {
+            console.log(response);
+            document.getElementById("content").innerHTML = JSON.stringify(response.data);
+        }).catch((error) => {
+            console.log(error);
+        });
+    }
+    async function token() {
+        document.getElementById("access_token").innerHTML = window.sessionStorage.getItem("access_token");
+        document.getElementById("refresh_token").innerHTML = window.sessionStorage.getItem("refresh_token");
+    }
+
+    async function refreshTokens() {
+        await axios.get(
+            `https://localhost:5003/home/RefreshToken?refreshToken=${window.sessionStorage.getItem("refresh_token")}`
+        ).then((response) => {
+            console.log(response);
+            document.getElementById("access_token").innerHTML = response.data["access_token"];
+            document.getElementById("refresh_token").innerHTML = response.data["refresh_token"];
+            window.sessionStorage.setItem("access_token", response.data["access_token"]);
+            window.sessionStorage.setItem("refresh_token", response.data["refresh_token"]);
+            authAxios.defaults.headers.common['Authorization'] = 'Bearer '.concat(window.sessionStorage.getItem("access_token"));
+        }).catch((error) => {
+            console.log(error);
+            document.getElementById("content").innerHTML = error;
+        });
+    }
+</script>
+
+<h2>Tokens</h2>
+<dl>
+    <dt>access_token</dt>
+    <dd id="access_token"></dd>
+    <dt>refresh token</dt>
+    <dd id="refresh_token"></dd>
+</dl>
+
+<div>
+    <form>
+        <input type="button" value="Refresh Tokens" onclick="refreshTokens()" />
+        <input type="button" value ="Get values" onclick="getValues()"/>
+    </form>
+    
+    
+</div>
+<div id="content"></div>
+
+
